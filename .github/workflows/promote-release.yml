@@ -1,0 +1,74 @@
+name: Promote Release
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        description: 'The ref to promote'
+        required: true
+      type:
+        description: Type of release
+        required: true
+        type: string
+
+# The job below states what it needs; this only stops the workflow from
+# inheriting the repository default. The caller has to grant contents: write.
+permissions: {}
+
+jobs:
+  create-tags:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to push the moving major/minor/latest tags
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.ref }}
+      - name: get SHA and retrieve all tags
+        id: sha
+        run: |
+          echo "commit=$(git log -1 --format='%H')" >> "$GITHUB_OUTPUT"
+          git fetch --prune --unshallow --tags
+      - name: Generate tags
+        id: tags
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        if: inputs.type == 'latest'
+        env:
+          # Never interpolate the ref into the script body: a tag name may
+          # contain quotes or backticks, and this step holds a write token.
+          REF: ${{ inputs.ref }}
+        with:
+          # "v1.2.3" gives "v1" and "v1.2": the v stays on the moving tags,
+          # which is what consumers pin (@v1).
+          script: |
+            const version = process.env.REF
+            const major = version.split('.')[0]
+            const minor = version.split('.')[1]
+
+            core.setOutput('major', major)
+            core.setOutput('minor', [major, minor].join('.'))
+      - name: Set tag - ${{ inputs.type }}
+        uses: rickstaa/action-create-tag@a1c7777fcb2fee4f19b0f283ba888afa11678b72 # v1.7.2
+        id: tag
+        with:
+          tag: ${{ inputs.type }}
+          force_push_tag: true
+          commit_sha: ${{ steps.sha.outputs.commit }}
+      - name: Set tag - Major
+        uses: rickstaa/action-create-tag@a1c7777fcb2fee4f19b0f283ba888afa11678b72 # v1.7.2
+        if: inputs.type == 'latest'
+        id: major
+        with:
+          tag: ${{ steps.tags.outputs.major }}
+          force_push_tag: true
+          commit_sha: ${{ steps.sha.outputs.commit }}
+      - name: Set tag - Minor
+        uses: rickstaa/action-create-tag@a1c7777fcb2fee4f19b0f283ba888afa11678b72 # v1.7.2
+        if: inputs.type == 'latest'
+        id: minor
+        with:
+          tag: ${{ steps.tags.outputs.minor }}
+          force_push_tag: true
+          commit_sha: ${{ steps.sha.outputs.commit }}

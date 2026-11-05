@@ -1,0 +1,12 @@
+version: 2
+
+# commit-message.prefix is pinned rather than inferred from history, so the
+# title reads "build(deps): bump ...", which labeler.yml labels dependencies.
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "build"
+      include: "scope"
