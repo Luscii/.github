@@ -2,9 +2,13 @@ name: Promote Release
 on:
   workflow_call:
     inputs:
-      ref:
+      tag:
         type: string
-        description: 'The ref to promote'
+        description: 'The released tag name; only its name is used, to derive vX and vX.Y'
+        required: true
+      sha:
+        type: string
+        description: 'The released commit, which the moving tags point at'
         required: true
       type:
         description: Type of release
@@ -21,29 +25,29 @@ jobs:
     permissions:
       contents: write # to push the moving major/minor/latest tags
     steps:
+      # The commit, not the tag name: a tag is a mutable pointer, and an
+      # unqualified ref resolves to a same-named branch first, which anyone
+      # with write can push. The release event's commit cannot change.
       - name: Clone Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          ref: ${{ inputs.ref }}
-      - name: get SHA and retrieve all tags
-        id: sha
-        run: |
-          echo "commit=$(git log -1 --format='%H')" >> "$GITHUB_OUTPUT"
-          git fetch --prune --unshallow --tags
+          ref: ${{ inputs.sha }}
+      - name: Retrieve all tags
+        run: git fetch --prune --unshallow --tags
       - name: Generate tags
         id: tags
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         if: inputs.type == 'latest'
         env:
-          # Never interpolate the ref into the script body: a tag name may
+          # Never interpolate the tag into the script body: a tag name may
           # contain quotes or backticks, and this step holds a write token.
-          REF: ${{ inputs.ref }}
+          TAG: ${{ inputs.tag }}
         with:
           # "v1.2.3" gives "v1" and "v1.2": the v stays on the moving tags,
           # which is what consumers pin (@v1).
           script: |
-            const version = process.env.REF
+            const version = process.env.TAG
             const major = version.split('.')[0]
             const minor = version.split('.')[1]
 
@@ -55,7 +59,7 @@ jobs:
         with:
           tag: ${{ inputs.type }}
           force_push_tag: true
-          commit_sha: ${{ steps.sha.outputs.commit }}
+          commit_sha: ${{ inputs.sha }}
       - name: Set tag - Major
         uses: rickstaa/action-create-tag@a1c7777fcb2fee4f19b0f283ba888afa11678b72 # v1.7.2
         if: inputs.type == 'latest'
@@ -63,7 +67,7 @@ jobs:
         with:
           tag: ${{ steps.tags.outputs.major }}
           force_push_tag: true
-          commit_sha: ${{ steps.sha.outputs.commit }}
+          commit_sha: ${{ inputs.sha }}
       - name: Set tag - Minor
         uses: rickstaa/action-create-tag@a1c7777fcb2fee4f19b0f283ba888afa11678b72 # v1.7.2
         if: inputs.type == 'latest'
@@ -71,4 +75,4 @@ jobs:
         with:
           tag: ${{ steps.tags.outputs.minor }}
           force_push_tag: true
-          commit_sha: ${{ steps.sha.outputs.commit }}
+          commit_sha: ${{ inputs.sha }}
