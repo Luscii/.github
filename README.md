@@ -17,7 +17,7 @@ Organisation-wide defaults for Luscii repositories.
 | 📚 Documentation | `documentation` |
 | 🔧 Internal Changes | everything else |
 
-Left out of the notes: `skip-changelog`, `internal`, `AI: instructions`, `AI: agents`.
+Left out of the notes, and of version resolution: `skip-changelog` and `internal`, labels a person sets on purpose.
 
 ### Using it
 
