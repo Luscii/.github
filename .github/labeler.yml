@@ -22,23 +22,35 @@ labels:
   - label: "version: patch"
     title: "^(fix|chore)(\\([^)]*\\))?:"
 
-  # VERSION, from the branch prefix, for PRs without a conventional title.
+  # VERSION, from the branch prefix, for PRs without a conventional title. A
+  # rule's conditions combine with AND, so each branch rule also requires the
+  # title to have no "type(scope)!:" prefix: otherwise a fix: PR from a
+  # feature/ branch would still bump minor, and editing its title could not
+  # correct it. The title pattern is the exact complement of
+  # ^\w+(\([^)]*\))?!?: in RE2, which has no lookahead. Any \w+ type counts
+  # as conventional, so "Zorgmail: redact" falls back to the patch default.
   - label: "version: major"
     branch: "^major/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
   - label: "version: minor"
     branch: "^(feature|scenario)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
   - label: "version: patch"
     branch: "^(fix|bug|hotfix|chore|cleanup|enhancement)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
 
   # TYPE, from title and branch.
   - label: feature
     title: "^feat(\\([^)]*\\))?!?:"
+  # The branch rules here also only apply without a conventional title.
   - label: feature
     branch: "^(feature|scenario)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
   - label: bug
     title: "^fix(\\([^)]*\\))?!?:"
   - label: bug
     branch: "^(fix|bug|hotfix)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
   - label: chore
     title: "^chore(\\([^)]*\\))?!?:"
   - label: maintenance
