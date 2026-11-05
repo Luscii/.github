@@ -1,0 +1,42 @@
+name: Pull Request
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+concurrency:
+  group: ci-${{ github.head_ref }}-pr
+  cancel-in-progress: true
+
+# Every job states what it needs; this only stops the workflow from
+# inheriting the repository default.
+permissions: {}
+
+env:
+  # The release-drafter version the workflows pin, so the base is validated
+  # against the schema consumers on that version load it with.
+  RELEASE_DRAFTER_SHA: 978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+  CHECK_JSONSCHEMA_VERSION: "0.39.0"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release Drafter configuration against its schema
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/release-drafter.schema.json" \
+            "https://raw.githubusercontent.com/release-drafter/release-drafter/${RELEASE_DRAFTER_SHA}/drafter/schema.json"
+          pipx run --spec "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}" check-jsonschema \
+            --schemafile "$RUNNER_TEMP/release-drafter.schema.json" \
+            .github/release-drafter.yml .github/release-drafter-self.yml
+      - name: Workflows and Dependabot configuration
+        run: |
+          pipx run --spec "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}" check-jsonschema \
+            --builtin-schema vendor.github-workflows .github/workflows/*.yml
+          pipx run --spec "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}" check-jsonschema \
+            --builtin-schema vendor.dependabot .github/dependabot.yml

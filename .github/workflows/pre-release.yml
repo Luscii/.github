@@ -1,0 +1,29 @@
+name: Draft Release
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-pre-release
+  cancel-in-progress: true
+
+# The job below states what it needs; this only stops the workflow from
+# inheriting the repository default.
+permissions: {}
+
+jobs:
+  draft_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Draft Release
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          # Not the default .github/release-drafter.yml: that file is the base
+          # other repositories extend. This one extends it and adds the v tag.
+          config-name: release-drafter-self.yml
+          publish: false
+          token: ${{ secrets.GITHUB_TOKEN }}

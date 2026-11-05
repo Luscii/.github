@@ -1,0 +1,102 @@
+# Labels for this repository's PRs, which its own release notes (release-drafter-self.yml,
+# extending release-drafter.yml) group by. The same rules suit any Luscii repository
+# that extends the base: nothing here is repo-type specific, and a rule whose files
+# never occur in a repository never fires there.
+#
+# srvaroa/labeler is Go: patterns are RE2. No lookahead or lookbehind. An
+# invalid pattern is not reported with fail_on_error: false; it just never
+# matches.
+#
+# The labeler removes every label it manages that no rule matches, labels
+# added by hand or by Dependabot included. Every label below must therefore be
+# derivable from the PR itself.
+version: 1
+labels:
+  # VERSION, from the conventional-commit title. A breaking change ("type!:"
+  # or "type(scope)!:") is major only: the minor rule needs ":" right after
+  # the type or scope.
+  - label: "version: major"
+    title: "^\\w+(\\([^)]*\\))?!:"
+  - label: "version: minor"
+    title: "^feat(\\([^)]*\\))?:"
+  - label: "version: patch"
+    title: "^(fix|chore)(\\([^)]*\\))?:"
+
+  # VERSION, from the branch prefix, for PRs without a conventional title. A
+  # rule's conditions combine with AND, so each branch rule also requires the
+  # title to have no "type(scope)!:" prefix: otherwise a fix: PR from a
+  # feature/ branch would still bump minor, and editing its title could not
+  # correct it. The title pattern is the exact complement of
+  # ^\w+(\([^)]*\))?!?: in RE2, which has no lookahead. Any \w+ type counts
+  # as conventional, so "Zorgmail: redact" falls back to the patch default.
+  - label: "version: major"
+    branch: "^major/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
+  - label: "version: minor"
+    branch: "^(feature|scenario)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
+  - label: "version: patch"
+    branch: "^(fix|bug|hotfix|chore|cleanup|enhancement)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
+
+  # TYPE, from title and branch.
+  - label: feature
+    title: "^feat(\\([^)]*\\))?!?:"
+  # The branch rules here also only apply without a conventional title.
+  - label: feature
+    branch: "^(feature|scenario)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
+  - label: bug
+    title: "^fix(\\([^)]*\\))?!?:"
+  - label: bug
+    branch: "^(fix|bug|hotfix)/.+"
+    title: "^(\\W|[^:]*$|\\w+([^\\w(!:]|!([^:]|$)|\\(([^)]*$|[^)]*\\)([^!:]|$|!([^:]|$)))))"
+  - label: chore
+    title: "^chore(\\([^)]*\\))?!?:"
+  - label: maintenance
+    title: "^chore(\\([^)]*\\))?!?:"
+
+  # DEPENDENCIES, from the title only: Dependabot's "Bump x from a to b", with
+  # or without a "build(deps):" / "chore(deps):" prefix, and a manual bump
+  # titled the same way. Dependabot sets this label itself, but the labeler
+  # removes every label it manages that no rule matches, so without this rule
+  # a bump loses it. No lockfile rule: a feature or a refactor that also
+  # touches a lockfile is not a dependency update.
+  - label: dependencies
+    title: "^((build|chore)\\(deps(-dev)?\\): )?[Bb]ump "
+
+  # FILES
+  - label: documentation
+    files:
+      - "\\.md$"
+      - "^docs/"
+  - label: examples
+    files:
+      - "^examples/"
+  - label: infrastructure
+    files:
+      - "\\.tf$"
+      - "\\.tfvars$"
+  - label: "build definition"
+    files:
+      - "^\\.github/workflows/.+\\.ya?ml$"
+      - "^\\.github/actions/"
+      - "^\\.github/[^/]+\\.ya?ml$"
+  - label: "AI: instructions"
+    files:
+      - "^\\.github/instructions/"
+      - "^\\.github/copilot-instructions\\.md$"
+      - "(^|/)CLAUDE\\.md$"
+      - "(^|/)AGENTS\\.md$"
+  - label: "AI: agents"
+    files:
+      - "^\\.github/agents/"
+
+  # PR SIZE (not used by Release Drafter)
+  - label: "PR-Size: S"
+    size-below: 50
+  - label: "PR-Size: M"
+    size-above: 49
+    size-below: 333
+  - label: "PR-Size: L"
+    size-above: 332

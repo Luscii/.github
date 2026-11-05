@@ -93,13 +93,16 @@ categories:
     when:
       label: "version: minor"
 
+  # Only labels a person adds on purpose. pre-exclude also removes a PR from
+  # version resolution, so a label the labeler sets from changed files (such
+  # as "AI: instructions") would drop a feat!: PR that touched one of those
+  # files from the bump: a major release would ship as a patch. A PR that only
+  # changes AI instructions lands under Internal Changes instead.
   - type: pre-exclude
     when:
       labels:
         - skip-changelog
         - internal
-        - "AI: instructions"
-        - "AI: agents"
 
 # The conventional-commit prefix, scope and "!" included, comes off each entry's
 # title: on change-title, because a global replacer sees the assembled body,
