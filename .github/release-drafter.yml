@@ -1,0 +1,113 @@
+# Release Drafter base for Luscii repositories. Requires release-drafter v7
+# (categories with `when`, `exclusive`, `type`).
+#
+# A repository extends it at a tag and sets only its release mode:
+#
+#   _extends: Luscii/.github:release-drafter.yml@v1
+#   prerelease: true    # deploy-promoted: a deploy promotes the pre-release
+#   latest: false
+#
+# A published repository (module, action, library) needs only the _extends
+# line: prerelease false and latest true are the defaults. A repository that
+# tags "v1.2.3" also sets tag-template: "v$RESOLVED_VERSION".
+#
+# This repository is public on purpose: a workflow's GITHUB_TOKEN can read its
+# own repository and public ones, so a private base would need an App token in
+# every consumer. Nothing here is sensitive.
+#
+# A repository without a release-drafter.yml of its own also falls back to this
+# file, on the default branch rather than a tag.
+
+name-template: "v$RESOLVED_VERSION"
+tag-template: "$RESOLVED_VERSION"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+no-changes-template: "- No changes"
+
+# No heading above $CHANGES: each category renders its own, and the last one
+# takes what no other category matched, so a fixed heading here would stand
+# empty above the first category.
+template: |
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_VERSION
+
+# Versions count from pre-releases too, so a deploy-promoted repository's next
+# draft follows a failed one. Harmless where nothing is pre-released.
+include-pre-releases: true
+
+# exclusive: true lists a PR once, under the first category that matches it.
+# Without it v7 lists it under every match. Order matters:
+# - Examples before Infrastructure: an examples/ change also touches .tf files.
+# - Dependency Updates before Infrastructure: a Dependabot Terraform bump also
+#   edits the version constraint in a .tf file. labeler.yml sets dependencies
+#   from the title only, so a change that merely touches a lockfile stays out.
+# - Documentation late: terraform-docs and similar regenerate a README in PRs
+#   whose real change is elsewhere.
+# A category whose label a repository never sets renders no heading, so one
+# list serves modules, actions, services and infrastructure alike.
+categories:
+  - title: "🚨 Breaking Changes"
+    exclusive: true
+    semver-increment: major
+    when:
+      label: "version: major"
+  - title: "✨ New Features"
+    exclusive: true
+    when:
+      labels:
+        - "version: minor"
+        - feature
+  - title: "🐛 Bug Fixes"
+    exclusive: true
+    when:
+      labels:
+        - bug
+        - fix
+  - title: "📦 Examples"
+    exclusive: true
+    when:
+      label: examples
+  - title: "⬆️ Dependency Updates"
+    exclusive: true
+    when:
+      label: dependencies
+    collapse-after: 3
+  - title: "🏗️ Infrastructure"
+    exclusive: true
+    when:
+      label: infrastructure
+  - title: "📚 Documentation"
+    exclusive: true
+    when:
+      label: documentation
+  # No `when`: everything the categories above did not take, a PR without
+  # labels included.
+  - title: "🔧 Internal Changes"
+    collapse-after: 5
+
+  # Version resolution apart from the changelog categories, so "feature" groups
+  # a PR under New Features without forcing a minor bump. Major comes from
+  # Breaking Changes above; patch is the fallback when nothing else matches.
+  - type: version-resolver
+    semver-increment: minor
+    when:
+      label: "version: minor"
+
+  - type: pre-exclude
+    when:
+      labels:
+        - skip-changelog
+        - internal
+        - "AI: instructions"
+        - "AI: agents"
+
+# The conventional-commit prefix, scope and "!" included, comes off each entry's
+# title: on change-title, because a global replacer sees the assembled body,
+# where an anchored rule never matches an entry.
+replacers:
+  - target: change-title
+    search: '/^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([^)]*\))?!?:\s*/i'
+    replace: ''
+  # $3 holds the "#" already.
+  - search: '/\b(fix|close|resolve)(s|d)?\s+(#\d+)/gi'
+    replace: 'fixes $3'
