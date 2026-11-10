@@ -26,11 +26,12 @@ jobs:
       contents: read # the labeler reads .github/labeler.yml
       pull-requests: write # and labels the PR
     steps:
-      # A failed labelling run must be visible: without its version: label a
-      # breaking change drafts as a patch. So no continue-on-error, and
-      # fail_on_error (default false) is set. On a fork PR the token is
-      # read-only and this check goes red; label the PR by hand, which the
-      # read-only labeler then cannot strip.
+      # fail_on_error (default false) turns this check red when labeler.yml
+      # cannot be read or parsed. A failed label update does not: the labeler
+      # logs it and exits 0, so on a fork PR (read-only token) this check stays
+      # green. Label such a PR by hand; the read-only labeler cannot strip it.
+      # A conventional title's version does not depend on the label:
+      # release-drafter.yml reads it from the title too.
       - name: PR Labeling
         uses: srvaroa/labeler@bf262763a8a8e191f5847873aecc0f29df84f957 # v1.14.0
         with:
