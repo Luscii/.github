@@ -1,7 +1,0 @@
-# This repository's own releases. The notes follow the base it publishes
-# (release-drafter.yml); only the tag differs: consumers pin
-# `_extends: Luscii/.github:release-drafter.yml@v1`, so tags carry a "v",
-# like the other Luscii gha- repositories.
-_extends: release-drafter.yml
-name-template: "v$RESOLVED_VERSION"
-tag-template: "v$RESOLVED_VERSION"

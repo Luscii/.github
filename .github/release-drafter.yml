@@ -3,13 +3,16 @@
 #
 # A repository extends it at a tag and sets only its release mode:
 #
-#   _extends: Luscii/.github:release-drafter.yml@v1
+#   _extends: Luscii/.github:release-drafter.yml@1
 #   prerelease: true    # deploy-promoted: a deploy promotes the pre-release
 #   latest: false
 #
 # A published repository (module, action, library) needs only the _extends
-# line: prerelease false and latest true are the defaults. A repository that
-# tags "v1.2.3" also sets tag-template: "v$RESOLVED_VERSION".
+# line: prerelease false and latest true are the defaults.
+#
+# Tags are X.Y.Z, without a "v" (the release *name* keeps it). The one
+# exception is a Go module, which Go requires to tag vX.Y.Z: it also sets
+# tag-template: "v$RESOLVED_VERSION".
 #
 # This repository is public on purpose: a workflow's GITHUB_TOKEN can read its
 # own repository and public ones, so a private base would need an App token in
