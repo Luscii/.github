@@ -40,20 +40,28 @@ include-pre-releases: true
 
 # exclusive: true lists a PR once, under the first category that matches it.
 # Without it v7 lists it under every match. Order matters:
+# - Dependency Updates before Examples and Infrastructure: a Dependabot bump
+#   also edits .tf files, in examples/ too. labeler.yml sets dependencies from
+#   the title only, so a change that merely touches a lockfile stays out.
 # - Examples before Infrastructure: an examples/ change also touches .tf files.
-# - Dependency Updates before Infrastructure: a Dependabot Terraform bump also
-#   edits the version constraint in a .tf file. labeler.yml sets dependencies
-#   from the title only, so a change that merely touches a lockfile stays out.
 # - Documentation late: terraform-docs and similar regenerate a README in PRs
 #   whose real change is elsewhere.
 # A category whose label a repository never sets renders no heading, so one
 # list serves modules, actions, services and infrastructure alike.
+#
+# The version a conventional title declares is read from the title itself as
+# well as from the labeler's label (entries under `when` combine with OR): the
+# labeler cannot fail the check when it fails to label (see
+# label-pull-request.yml), and a breaking change must not draft as a patch.
+# The labels still cover branch-only PRs and labels set by hand.
 categories:
   - title: "🚨 Breaking Changes"
     exclusive: true
     semver-increment: major
     when:
-      label: "version: major"
+      - label: "version: major"
+      - conventional:
+          breaking: true
   - title: "✨ New Features"
     exclusive: true
     when:
@@ -66,15 +74,15 @@ categories:
       labels:
         - bug
         - fix
-  - title: "📦 Examples"
-    exclusive: true
-    when:
-      label: examples
   - title: "⬆️ Dependency Updates"
     exclusive: true
     when:
       label: dependencies
     collapse-after: 3
+  - title: "📦 Examples"
+    exclusive: true
+    when:
+      label: examples
   - title: "🏗️ Infrastructure"
     exclusive: true
     when:
@@ -94,13 +102,16 @@ categories:
   - type: version-resolver
     semver-increment: minor
     when:
-      label: "version: minor"
+      - label: "version: minor"
+      - conventional:
+          type: feat
 
   # Only labels a person adds on purpose. pre-exclude also removes a PR from
   # version resolution, so a label the labeler sets from changed files (such
   # as "AI: instructions") would drop a feat!: PR that touched one of those
   # files from the bump: a major release would ship as a patch. A PR that only
-  # changes AI instructions lands under Internal Changes instead.
+  # changes AI instructions lands under Documentation instead: those files are
+  # Markdown.
   - type: pre-exclude
     when:
       labels:

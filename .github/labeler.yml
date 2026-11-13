@@ -4,7 +4,7 @@
 # never occur in a repository never fires there.
 #
 # srvaroa/labeler is Go: patterns are RE2. No lookahead or lookbehind. An
-# invalid pattern is not reported with fail_on_error: false; it just never
+# invalid pattern is never reported, whatever fail_on_error says; it just never
 # matches.
 #
 # The labeler removes every label it manages that no rule matches, labels
@@ -56,14 +56,15 @@ labels:
   - label: maintenance
     title: "^chore(\\([^)]*\\))?!?:"
 
-  # DEPENDENCIES, from the title only: Dependabot's "Bump x from a to b", with
-  # or without a "build(deps):" / "chore(deps):" prefix, and a manual bump
-  # titled the same way. Dependabot sets this label itself, but the labeler
-  # removes every label it manages that no rule matches, so without this rule
-  # a bump loses it. No lockfile rule: a feature or a refactor that also
-  # touches a lockfile is not a dependency update.
+  # DEPENDENCIES, from the title only: Dependabot's "Bump x from a to b",
+  # "[security] bump …", "update x requirement from …" and "update
+  # requirements for …", with or without a "build(deps):" / "chore(deps):"
+  # prefix, and a manual bump titled the same way. Dependabot sets this label
+  # itself, but the labeler removes every label it manages that no rule
+  # matches, so without this rule a bump loses it. No lockfile rule: a feature
+  # or a refactor that also touches a lockfile is not a dependency update.
   - label: dependencies
-    title: "^((build|chore)\\(deps(-dev)?\\): )?[Bb]ump "
+    title: "^((build|chore)\\(deps(-dev)?\\): )?(\\[[Ss]ecurity\\] )?([Bb]ump |[Uu]pdate (\\S+ requirement|requirements for) )"
 
   # FILES
   - label: documentation
