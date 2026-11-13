@@ -4,7 +4,7 @@ on:
     inputs:
       tag:
         type: string
-        description: 'The released tag name; only its name is used, to derive vX and vX.Y'
+        description: 'The released tag name; only its name is used, to derive X and X.Y'
         required: true
       sha:
         type: string
@@ -44,8 +44,7 @@ jobs:
           # contain quotes or backticks, and this step holds a write token.
           TAG: ${{ inputs.tag }}
         with:
-          # "v1.2.3" gives "v1" and "v1.2": the v stays on the moving tags,
-          # which is what consumers pin (@v1).
+          # "1.2.3" gives "1" and "1.2", the moving tags consumers pin (@1).
           script: |
             const version = process.env.TAG
             const major = version.split('.')[0]

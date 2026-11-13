@@ -1,5 +1,5 @@
-# Labels for this repository's PRs, which its own release notes (release-drafter-self.yml,
-# extending release-drafter.yml) group by. The same rules suit any Luscii repository
+# Labels for this repository's PRs, which its own release notes (release-drafter.yml)
+# group by. The same rules suit any Luscii repository
 # that extends the base: nothing here is repo-type specific, and a rule whose files
 # never occur in a repository never fires there.
 #

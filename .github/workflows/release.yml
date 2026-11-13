@@ -5,7 +5,7 @@ on:
       - published
 
 # Promotions queue rather than cancel: the tags move in separate steps, so a
-# cancelled run could leave v1.0 short of its last patch, and nothing retries
+# cancelled run could leave 1.0 short of its last patch, and nothing retries
 # it. GitHub keeps only the newest *pending* run per group, so a third release
 # published while one runs and one waits still replaces the waiting one.
 concurrency:
@@ -18,8 +18,8 @@ permissions: {}
 
 jobs:
   promote_release:
-    # `published` also fires for a pre-release. Consumers pin @v1, so a release
-    # candidate must never move v1, v1.x or latest.
+    # `published` also fires for a pre-release. Consumers pin @1, so a release
+    # candidate must never move 1, 1.x or latest.
     if: ${{ !github.event.release.prerelease }}
     uses: ./.github/workflows/promote-release.yml
     permissions:

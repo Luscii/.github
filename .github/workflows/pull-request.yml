@@ -33,7 +33,7 @@ jobs:
             "https://raw.githubusercontent.com/release-drafter/release-drafter/${RELEASE_DRAFTER_SHA}/drafter/schema.json"
           pipx run --spec "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}" check-jsonschema \
             --schemafile "$RUNNER_TEMP/release-drafter.schema.json" \
-            .github/release-drafter.yml .github/release-drafter-self.yml
+            .github/release-drafter.yml
       - name: Workflows and Dependabot configuration
         run: |
           pipx run --spec "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}" check-jsonschema \
