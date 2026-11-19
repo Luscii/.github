@@ -54,5 +54,3 @@ Luscii and OMRON repositories tag releases `X.Y.Z`, without a `v`: `1.4.2`, not 
 **The one exception is a Go module.** Go only resolves module versions from `vX.Y.Z` tags (`go install …@v1.4.2`), so a Go module sets `tag-template: "v$RESOLVED_VERSION"`, and its moving tags are `vX` and `vX.Y`.
 
 GitHub Actions are no exception: an action is pinned `@1`, like everything else.
-
-The `v1.0.0`, `v1` and `v1.0` tags in this repository come from before this rule. They are frozen: nothing moves them any more, and they go once no repository pins `@v1`.
